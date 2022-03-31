@@ -12,7 +12,7 @@
 #region Includes
 
 from os import getcwd, system
-from os.path import basename, exists, splitext
+from os.path import basename, dirname, exists, splitext
 from glob import glob
 
 #endregion
@@ -45,11 +45,14 @@ def Main():
 	if exists(ffmpeg):
 		files = [f for f in glob(mediaGlob, recursive=True) if f.lower().endswith('.ts')]
 		for f in files:
-			tsFile: str = f
+			parent: str = dirname(f)
 			fileName: str = basename(f)
-			title: str = splitext(fileName)[0].replace(' - ', ': ').replace('_', '?').replace('--', '/')
-			aacFile: str = f.replace(tsExt, aacExt)
-			mp4File: str = f.replace(tsExt, mp4Ext).replace('--', '-').replace('_', '')
+			tsFile: str = f
+			title: str = splitext(fileName)[0].replace(' - ', ': ').replace('- ', ': ').replace('--', '/')
+			if title.endswith('_'):
+				title = title[:len(title) - 1] + '?'
+			aacFile: str = parent + '\\' + fileName.replace(tsExt, aacExt)
+			mp4File: str = parent + '\\' + fileName.replace(tsExt, mp4Ext).replace('--', '-')
 			options: str = "-i \"{0}\" -i \"{1}\" -metadata title=\"{2}\" -c:v copy -c:a copy \"{3}\"".format(tsFile, aacFile, title, mp4File)
 			if exists(aacFile) and not exists(mp4File):
 				system("{0} {1}".format(ffmpeg, options))
